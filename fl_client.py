@@ -46,6 +46,11 @@ class LocalModel(object):
 
     # return final weights, train loss, train accuracy
     def train_one_round(self):
+        
+        time_start_train_one_round = time.time()
+        print("------------------------------------------------time_start_train_one_round: ", time_start_train_one_round-time_start)
+        fo.write("time_start_train_one_round:    " + str(time_start_train_one_round) + "\n")
+        
         self.model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
               metrics=['accuracy'])
@@ -59,6 +64,11 @@ class LocalModel(object):
         score = self.model.evaluate(self.x_train, self.y_train, verbose=0)
         print('Train loss:', score[0])
         print('Train accuracy:', score[1])
+        
+        time_finish_train_one_round = time.time()
+        print("------------------------------------------------time_finish_train_one_round: ", time_finish_train_one_round-time_start)
+        fo.write("time_finish_train_one_round:    " + str(time_finish_train_one_round) + "\n")
+        
         return self.model.get_weights(), score[0], score[1]
 
     def validate(self):
@@ -103,12 +113,26 @@ class FederatedClient(object):
             max_train=FederatedClient.MAX_DATASET_SIZE_KEPT,
             data_split=model_config['data_split']
         )
+        
+        time_fake_data_done = time.time()
+        print("------------------------------------------------time_fake_data_done: ", time_fake_data_done-time_start)
+        fo.write("time_fake_data_done:    " + str(time_fake_data_done) + "\n")
+        
         self.local_model = LocalModel(model_config, fake_data)
+        
+        time_local_model_done = time.time()
+        print("------------------------------------------------time_local_model_done: ", time_local_model_done-time_start)
+        fo.write("time_local_model_done:    " + str(time_local_model_done) + "\n")
+        
         # ready to be dispatched for training
         self.sio.emit('client_ready', {
                 'train_size': self.local_model.x_train.shape[0],
                 'class_distr': my_class_distr  # for debugging, not needed in practice
             })
+        
+        time_after_emit = time.time()
+        print("------------------------------------------------time_after_emit: ", time_after_emit-time_start)
+        fo.write("time_after_emit:    " + str(time_after_emit) + "\n")
 
 
     def register_handles(self):
@@ -149,8 +173,17 @@ class FederatedClient(object):
                 valid_loss, valid_accuracy = self.local_model.validate()
                 resp['valid_loss'] = valid_loss
                 resp['valid_accuracy'] = valid_accuracy
+            
+            
+            time_start_emit = time.time()
+            print("------------------------------------------------time_start_emit: ", time_start_emit-time_start)
+            fo.write("time_start_emit:    " + str(time_start_emit) + "\n")
 
             self.sio.emit('client_update', resp)
+            
+            time_finish_emit = time.time()
+            print("------------------------------------------------time_finish_emit: ", time_finish_emit-time_start)
+            fo.write("time_finish_emit:    " + str(time_finish_emit) + "\n")
 
 
         def on_stop_and_eval(*args):
@@ -211,4 +244,11 @@ class FederatedClient(object):
 
 
 if __name__ == "__main__":
+    
+    fo = open("timeline_clinet.txt", "w")
+    
+    time_start = time.time()
+    print("------------------------------------------------time_start: ", time_start)
+    fo.write("time_start:    " + str(time_start) + "\n")
+    
     FederatedClient("127.0.0.1", 5000, datasource.Mnist)
