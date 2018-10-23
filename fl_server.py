@@ -1,4 +1,5 @@
 import pickle
+import cPickle
 import keras
 import uuid
 from keras.models import Sequential
@@ -13,7 +14,6 @@ import numpy as np
 import json
 import msgpack_numpy
 # https://github.com/lebedov/msgpack-numpy
-
 import sys
 import time
 
@@ -39,19 +39,50 @@ class GlobalModel(object):
         self.valid_accuracies = []
 
         self.training_start_time = int(round(time.time()))
+        
     
     def build_model(self):
         raise NotImplementedError()
 
     # client_updates = [(w, n)..]
     def update_weights(self, client_weights, client_sizes):
+        
+        time_start_update_weights = time.time()
+        print("--------------------------------------------time_start_update_weights: ", time_start_update_weights-time_start)
+        fo.write("*" + "    time_start_update_weights:    " + str(time_start_update_weights) + "\n")
+        
+        
         new_weights = [np.zeros(w.shape) for w in self.current_weights]
         total_size = np.sum(client_sizes)
-
+        sum_break = 0
+        
         for c in range(len(client_weights)):
             for i in range(len(new_weights)):
+                if client_weights[c][i]=='K':
+                    total_size -= client_sizes[c]
+                    break;
+                
+                    
+        
+        
+        print("------------total_size=", total_size)
+        
+        for c in range(len(client_weights)):
+            for i in range(len(new_weights)):
+                print("------------c=", c, "------------i=", i)
+                #print(client_weights[c][i])
+                if client_weights[c][i]=='K':
+                    sum_break += 1
+                    break
                 new_weights[i] += client_weights[c][i] * client_sizes[c] / total_size
-        self.current_weights = new_weights        
+        self.current_weights = new_weights
+        print("-----------sum_break: ", sum_break)
+        
+        time_finish_update_weights = time.time()
+        print("-------------------------------------------time_finish_update_weights: ", time_finish_update_weights-time_start)
+        fo.write("*" + "    time_finish_update_weights:    " + str(time_finish_update_weights) + "\n")
+        
+        
 
     def aggregate_loss_accuracy(self, client_losses, client_accuracies, client_sizes):
         total_size = np.sum(client_sizes)
@@ -105,7 +136,7 @@ class GlobalModel_MNIST_CNN(GlobalModel):
         model.add(MaxPooling2D(pool_size=(2, 2)))
         model.add(Dropout(0.25))
         model.add(Flatten())
-        model.add(Dense(128, activation='relu'))
+        model.add(Dense(128, activation='relu')) 
         model.add(Dropout(0.5))
         model.add(Dense(10, activation='softmax'))
 
@@ -170,7 +201,7 @@ class FLServer(object):
             print(request.sid, "reconnected")
 
         @self.socketio.on('disconnect')
-        def handle_reconnect():
+        def handle_disconnect():
             print(request.sid, "disconnected")
             if request.sid in self.ready_client_sids:
                 self.ready_client_sids.remove(request.sid)
@@ -196,6 +227,13 @@ class FLServer(object):
 
         @self.socketio.on('client_update')
         def handle_client_update(data):
+            
+            
+            time_start_client_update = time.time()
+            print("-------------------------------------------time_start_client_update: ", time_start_client_update-time_start)
+            fo.write(str(self.current_round) + "    time_start_client_update:    " + str(time_start_client_update) + "\n")
+            
+            
             print("received client update of bytes: ", sys.getsizeof(data))
             print("handle client_update", request.sid)
             for x in data:
@@ -216,7 +254,9 @@ class FLServer(object):
                 self.current_round_client_updates[-1]['weights'] = pickle_string_to_obj(data['weights'])
                 
                 # tolerate 30% unresponsive clients
-                if len(self.current_round_client_updates) > FLServer.NUM_CLIENTS_CONTACTED_PER_ROUND * .7:
+                
+                if len(self.current_round_client_updates) == FLServer.NUM_CLIENTS_CONTACTED_PER_ROUND * 1:
+                    
                     self.global_model.update_weights(
                         [x['weights'] for x in self.current_round_client_updates],
                         [x['train_size'] for x in self.current_round_client_updates],
@@ -227,10 +267,10 @@ class FLServer(object):
                         [x['train_size'] for x in self.current_round_client_updates],
                         self.current_round
                     )
-
+    
                     print("aggr_train_loss", aggr_train_loss)
                     print("aggr_train_accuracy", aggr_train_accuracy)
-
+                    
                     if 'valid_loss' in self.current_round_client_updates[0]:
                         aggr_valid_loss, aggr_valid_accuracy = self.global_model.aggregate_valid_loss_accuracy(
                             [x['valid_loss'] for x in self.current_round_client_updates],
@@ -240,7 +280,14 @@ class FLServer(object):
                         )
                         print("aggr_valid_loss", aggr_valid_loss)
                         print("aggr_valid_accuracy", aggr_valid_accuracy)
+                        
+                        
 
+                    time_finish_client_update = time.time()
+                    print("---------------------------------time_finish_client_update: ", time_finish_client_update-time_start)
+                    fo.write(str(self.current_round) + "    time_finish_client_update:    " + str(time_finish_client_update) + "\n")
+
+                    
                     if self.global_model.prev_train_loss is not None and \
                             (self.global_model.prev_train_loss - aggr_train_loss) / self.global_model.prev_train_loss < .01:
                         # converges
@@ -264,7 +311,7 @@ class FLServer(object):
             self.eval_client_updates += [data]
 
             # tolerate 30% unresponsive clients
-            if len(self.eval_client_updates) > FLServer.NUM_CLIENTS_CONTACTED_PER_ROUND * .7:
+            if len(self.eval_client_updates) == FLServer.NUM_CLIENTS_CONTACTED_PER_ROUND * 1:
                 aggr_test_loss, aggr_test_accuracy = self.global_model.aggregate_loss_accuracy(
                     [x['test_loss'] for x in self.eval_client_updates],
                     [x['test_accuracy'] for x in self.eval_client_updates],
@@ -274,10 +321,18 @@ class FLServer(object):
                 print("aggr_test_accuracy", aggr_test_accuracy)
                 print("== done ==")
                 self.eval_client_updates = None  # special value, forbid evaling again
+                
+                fo.close()
 
     
     # Note: we assume that during training the #workers will be >= MIN_NUM_WORKERS
     def train_next_round(self):
+        
+        
+        time_start_train_next_round = time.time()
+        print("-----------------------------------------time_start_train_next_round: ", time_start_train_next_round-time_start)
+        fo.write(str(self.current_round) + "    time_start_train_next_round:    " + str(time_start_train_next_round) + "\n")
+        
         self.current_round += 1
         # buffers all client updates
         self.current_round_client_updates = []
@@ -296,6 +351,10 @@ class FLServer(object):
                     'weights_format': 'pickle',
                     'run_validation': self.current_round % FLServer.ROUNDS_BETWEEN_VALIDATIONS == 0,
                 }, room=rid)
+            
+        time_finish_train_next_round = time.time()
+        print("---------------------------------------time_finish_train_next_round: ", time_finish_train_next_round-time_start)
+        fo.write(str(self.current_round) + "    time_finish_train_next_round:    " + str(time_finish_train_next_round) + "\n")
 
     
     def stop_and_eval(self):
@@ -314,11 +373,13 @@ class FLServer(object):
 
 def obj_to_pickle_string(x):
     return codecs.encode(pickle.dumps(x), "base64").decode()
+    #return pickle.dumps(x)
     # return msgpack.packb(x, default=msgpack_numpy.encode)
     # TODO: compare pickle vs msgpack vs json for serialization; tradeoff: computation vs network IO
 
 def pickle_string_to_obj(s):
     return pickle.loads(codecs.decode(s.encode(), "base64"))
+    #return pickle.loads(s)
     # return msgpack.unpackb(s, object_hook=msgpack_numpy.decode)
 
 
@@ -327,6 +388,12 @@ if __name__ == '__main__':
     # and configured properly inside socketio.run(). In production mode the eventlet web server
     # is used if available, else the gevent web server is used.
     
-    server = FLServer(GlobalModel_MNIST_CNN, "127.0.0.1", 5000)
+    fo = open("timeline_server.txt", "w")
+    
+    time_start = time.time()
+    print("------------------------------------------------time_start: ", time_start)
+    fo.write("*" + "    time_start:    " + str(time_start) + "\n")
+    
+    server = FLServer(GlobalModel_MNIST_CNN, "172.17.0.2", 5000)
     print("listening on 127.0.0.1:5000");
     server.start()
