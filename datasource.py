@@ -25,14 +25,7 @@ class Mnist(DataSource):
         n = self.x.shape[0]
         idx = np.arange(n)
         np.random.shuffle(idx)
-        #self.x = self.x[idx]  # n * 28 * 28
-        t = 0
-        self.x_ = self.x
-        for i in idx:
-            self.x_[t] = self.x[i]
-            t += 1
-        self.x = self.x_
-        
+        self.x = self.x[idx]  # n * 28 * 28  
         self.y = self.y[idx]  # n * 1
         data_split = (0.6, 0.3, 0.1)
         num_train = int(n * data_split[0])
