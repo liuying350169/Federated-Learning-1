@@ -394,6 +394,6 @@ if __name__ == '__main__':
     print("------------------------------------------------time_start: ", time_start)
     fo.write("*" + "    time_start:    " + str(time_start) + "\n")
     
-    server = FLServer(GlobalModel_MNIST_CNN, "172.31.18.100", 5000)
-    print("listening on 172.31.18.100:5000");
+    server = FLServer(GlobalModel_MNIST_CNN, "172.31.17.237", 5000)
+    print("listening on 172.31.17.237:5000");
     server.start()
