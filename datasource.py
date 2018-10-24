@@ -31,7 +31,7 @@ class Mnist(DataSource):
         for i in idx:
             self.x_[t] = self.x[i]
             t += 1
-        x = x_
+        self.x = self.x_
         
         self.y = self.y[idx]  # n * 1
         data_split = (0.6, 0.3, 0.1)
