@@ -49,7 +49,7 @@ class GlobalModel(object):
         
         time_start_update_weights = time.time()
         print("--------------------------------------------time_start_update_weights: ", time_start_update_weights-time_start)
-        fo.write("*" + "    time_start_update_weights:    " + str(time_start_update_weights) + "\n")
+        #fo.write("*" + "    time_start_update_weights:    " + str(time_start_update_weights) + "\n")
         
         
         new_weights = [np.zeros(w.shape) for w in self.current_weights]
@@ -80,7 +80,7 @@ class GlobalModel(object):
         
         time_finish_update_weights = time.time()
         print("-------------------------------------------time_finish_update_weights: ", time_finish_update_weights-time_start)
-        fo.write("*" + "    time_finish_update_weights:    " + str(time_finish_update_weights) + "\n")
+        #fo.write("*" + "    time_finish_update_weights:    " + str(time_finish_update_weights) + "\n")
         
         
 
@@ -230,8 +230,8 @@ class FLServer(object):
             
             
             time_start_client_update = time.time()
+            fo.write(str(self.current_round) + "    " + request.sid + "    time_start_client_update:    " + str(time_start_client_update) + "\n")
             print("-------------------------------------------time_start_client_update: ", time_start_client_update-time_start)
-            fo.write(str(self.current_round) + "    time_start_client_update:    " + str(time_start_client_update) + "\n")
             
             
             print("received client update of bytes: ", sys.getsizeof(data))
@@ -285,7 +285,7 @@ class FLServer(object):
 
                     time_finish_client_update = time.time()
                     print("---------------------------------time_finish_client_update: ", time_finish_client_update-time_start)
-                    fo.write(str(self.current_round) + "    time_finish_client_update:    " + str(time_finish_client_update) + "\n")
+                    #fo.write(str(self.current_round) + "    time_finish_client_update:    " + str(time_finish_client_update) + "\n")
 
                     
                     if self.global_model.prev_train_loss is not None and \
@@ -328,11 +328,6 @@ class FLServer(object):
     # Note: we assume that during training the #workers will be >= MIN_NUM_WORKERS
     def train_next_round(self):
         
-        
-        time_start_train_next_round = time.time()
-        print("-----------------------------------------time_start_train_next_round: ", time_start_train_next_round-time_start)
-        fo.write(str(self.current_round) + "    time_start_train_next_round:    " + str(time_start_train_next_round) + "\n")
-        
         self.current_round += 1
         # buffers all client updates
         self.current_round_client_updates = []
@@ -342,6 +337,7 @@ class FLServer(object):
         print("request updates from", client_sids_selected)
 
         # by default each client cnn is in its own "room"
+       
         for rid in client_sids_selected:
             emit('request_update', {
                     'model_id': self.model_id,
@@ -351,10 +347,14 @@ class FLServer(object):
                     'weights_format': 'pickle',
                     'run_validation': self.current_round % FLServer.ROUNDS_BETWEEN_VALIDATIONS == 0,
                 }, room=rid)
+       
+	     time_start_train_next_round = time.time()
+            fo.write(str(self.current_round) + "    " + rid + "    time_start_train_next_round:    " + str(time_start_train_next_round) + "\n")
+            print("-----------------------------------------time_start_train_next_round: ", time_start_train_next_round-time_start)
             
         time_finish_train_next_round = time.time()
         print("---------------------------------------time_finish_train_next_round: ", time_finish_train_next_round-time_start)
-        fo.write(str(self.current_round) + "    time_finish_train_next_round:    " + str(time_finish_train_next_round) + "\n")
+        #fo.write(str(self.current_round) + "    time_finish_train_next_round:    " + str(time_finish_train_next_round) + "\n")
 
     
     def stop_and_eval(self):
@@ -389,11 +389,11 @@ if __name__ == '__main__':
     # is used if available, else the gevent web server is used.
     
     fo = open("timeline_server.txt", "w")
-    
+
     time_start = time.time()
+    fo.write("*    " + "*    " + "time_start:    " + str(time_start) + "\n")
     print("------------------------------------------------time_start: ", time_start)
-    fo.write("*" + "    time_start:    " + str(time_start) + "\n")
-    
-    server = FLServer(GlobalModel_MNIST_CNN, "172.31.17.237", 5000)
-    print("listening on 172.31.17.237:5000");
+       
+    server = FLServer(GlobalModel_MNIST_CNN, "172.31.26.185", 5000)
+    print("listening on 172.31.26.185:5000");
     server.start()
