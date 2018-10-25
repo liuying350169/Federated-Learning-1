@@ -1,5 +1,4 @@
 import pickle
-import cPickle
 import keras
 import uuid
 from keras.models import Sequential
