@@ -68,7 +68,7 @@ class GlobalModel(object):
         
         for c in range(len(client_weights)):
             for i in range(len(new_weights)):
-                print("------------c=", c, "------------i=", i)
+                #print("------------c=", c, "------------i=", i)
                 #print(client_weights[c][i])
                 if client_weights[c][i]=='K':
                     sum_break += 1
@@ -151,9 +151,9 @@ class GlobalModel_MNIST_CNN(GlobalModel):
 
 class FLServer(object):
     
-    MIN_NUM_WORKERS = 5
+    MIN_NUM_WORKERS = 15
     MAX_NUM_ROUNDS = 50
-    NUM_CLIENTS_CONTACTED_PER_ROUND = 5
+    NUM_CLIENTS_CONTACTED_PER_ROUND = 15
     ROUNDS_BETWEEN_VALIDATIONS = 2
 
     def __init__(self, global_model, host, port):
