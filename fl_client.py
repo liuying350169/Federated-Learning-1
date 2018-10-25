@@ -148,9 +148,9 @@ class FederatedClient(object):
 
         def on_request_update(*args):
             
-            time_start_emit = time.time()
-            fo.write("time_start_request_data:    " + str(time_start_request_data) + "\n")
-            print("------------------------------------------------time_start_request_data: ", time_start_request_data-time_start)
+            time_start_request_update = time.time()
+            fo.write("time_start_request_update:    " + str(time_start_request_update) + "\n")
+            print("------------------------------------------------time_start_request_update: ", time_start_request_update-time_start)
             
             req = args[0]
             # req:
