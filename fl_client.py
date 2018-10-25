@@ -181,14 +181,14 @@ class FederatedClient(object):
             
             
             time_start_emit = time.time()
-            fo.write("time_start_emit:    " + str(time_start_emit) + "\n")
+            #fo.write("time_start_emit:    " + str(time_start_emit) + "\n")
             print("------------------------------------------------time_start_emit: ", time_start_emit-time_start)
 
             self.sio.emit('client_update', resp)
             
             time_finish_emit = time.time()
+            fo.write("time_finish_emit:    " + str(time_finish_emit) + "\n")
             print("------------------------------------------------time_finish_emit: ", time_finish_emit-time_start)
-            #fo.write("time_finish_emit:    " + str(time_finish_emit) + "\n")
 
 
         def on_stop_and_eval(*args):
