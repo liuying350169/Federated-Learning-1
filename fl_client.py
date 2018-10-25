@@ -49,7 +49,7 @@ class LocalModel(object):
         
         time_start_train_one_round = time.time()
         print("------------------------------------------------time_start_train_one_round: ", time_start_train_one_round-time_start)
-        fo.write("time_start_train_one_round:    " + str(time_start_train_one_round) + "\n")
+        #fo.write("time_start_train_one_round:    " + str(time_start_train_one_round) + "\n")
         
         self.model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
@@ -67,7 +67,7 @@ class LocalModel(object):
         
         time_finish_train_one_round = time.time()
         print("------------------------------------------------time_finish_train_one_round: ", time_finish_train_one_round-time_start)
-        fo.write("time_finish_train_one_round:    " + str(time_finish_train_one_round) + "\n")
+        #fo.write("time_finish_train_one_round:    " + str(time_finish_train_one_round) + "\n")
         
         return self.model.get_weights(), score[0], score[1]
 
@@ -116,13 +116,13 @@ class FederatedClient(object):
         
         time_fake_data_done = time.time()
         print("------------------------------------------------time_fake_data_done: ", time_fake_data_done-time_start)
-        fo.write("time_fake_data_done:    " + str(time_fake_data_done) + "\n")
+        #fo.write("time_fake_data_done:    " + str(time_fake_data_done) + "\n")
         
         self.local_model = LocalModel(model_config, fake_data)
         
         time_local_model_done = time.time()
         print("------------------------------------------------time_local_model_done: ", time_local_model_done-time_start)
-        fo.write("time_local_model_done:    " + str(time_local_model_done) + "\n")
+        #fo.write("time_local_model_done:    " + str(time_local_model_done) + "\n")
         
         # ready to be dispatched for training
         self.sio.emit('client_ready', {
@@ -132,7 +132,7 @@ class FederatedClient(object):
         
         time_after_emit = time.time()
         print("------------------------------------------------time_after_emit: ", time_after_emit-time_start)
-        fo.write("time_after_emit:    " + str(time_after_emit) + "\n")
+        #fo.write("time_after_emit:    " + str(time_after_emit) + "\n")
 
 
     def register_handles(self):
@@ -147,6 +147,11 @@ class FederatedClient(object):
             print('reconnect')
 
         def on_request_update(*args):
+            
+            time_start_emit = time.time()
+            fo.write("time_start_request_data:    " + str(time_start_request_data) + "\n")
+            print("------------------------------------------------time_start_request_data: ", time_start_request_data-time_start)
+            
             req = args[0]
             # req:
             #     'model_id'
@@ -176,14 +181,14 @@ class FederatedClient(object):
             
             
             time_start_emit = time.time()
-            print("------------------------------------------------time_start_emit: ", time_start_emit-time_start)
             fo.write("time_start_emit:    " + str(time_start_emit) + "\n")
+            print("------------------------------------------------time_start_emit: ", time_start_emit-time_start)
 
             self.sio.emit('client_update', resp)
             
             time_finish_emit = time.time()
             print("------------------------------------------------time_finish_emit: ", time_finish_emit-time_start)
-            fo.write("time_finish_emit:    " + str(time_finish_emit) + "\n")
+            #fo.write("time_finish_emit:    " + str(time_finish_emit) + "\n")
 
 
         def on_stop_and_eval(*args):
@@ -251,4 +256,4 @@ if __name__ == "__main__":
     print("------------------------------------------------time_start: ", time_start)
     fo.write("time_start:    " + str(time_start) + "\n")
     
-    FederatedClient("172.31.17.237", 5000, datasource.Mnist)
+    FederatedClient("172.31.26.185", 5000, datasource.Mnist)
