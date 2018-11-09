@@ -142,6 +142,8 @@ class FederatedClient(object):
 
         def on_disconnect():
             print('disconnect')
+            fo.close()
+            f_training.close()
 
         def on_reconnect():
             print('reconnect')
