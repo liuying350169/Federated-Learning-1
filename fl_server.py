@@ -206,6 +206,7 @@ class FLServer(object):
                 self.ready_client_sids.remove(request.sid)
 
         @self.socketio.on('client_wake_up')
+        f_client.write(request.sid + "\n")
         def handle_wake_up():
             print("client wake_up: ", request.sid)
             emit('init', {
@@ -329,6 +330,7 @@ class FLServer(object):
                 
                 fo.close()
                 f_js.close()
+                f_client.close()
 
     
     # Note: we assume that during training the #workers will be >= MIN_NUM_WORKERS
@@ -396,6 +398,7 @@ if __name__ == '__main__':
     
     fo = open("timeline_server.txt", "w")
     f_js = open("time_jisuan.txt", "w")
+    f_client = open("clients.txt", "w")
     
     time_start = time.time()
     fo.write("*    " + "*    " + "time_start:    " + str(time_start) + "\n")
