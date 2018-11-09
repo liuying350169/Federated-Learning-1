@@ -256,10 +256,16 @@ class FLServer(object):
                 
                 if len(self.current_round_client_updates) == FLServer.NUM_CLIENTS_CONTACTED_PER_ROUND * 1:
                     
+                    time_start_js = time.time()
+                    
                     self.global_model.update_weights(
                         [x['weights'] for x in self.current_round_client_updates],
                         [x['train_size'] for x in self.current_round_client_updates],
                     )
+                    
+                    time_end_js = time.time()
+                    fo.write(str(self.current_round) + "    time_js:    " + str(time_end_js-time_start_js) + "\n")
+                    
                     aggr_train_loss, aggr_train_accuracy = self.global_model.aggregate_train_loss_accuracy(
                         [x['train_loss'] for x in self.current_round_client_updates],
                         [x['train_accuracy'] for x in self.current_round_client_updates],
@@ -322,6 +328,7 @@ class FLServer(object):
                 self.eval_client_updates = None  # special value, forbid evaling again
                 
                 fo.close()
+                f_js.close()
 
     
     # Note: we assume that during training the #workers will be >= MIN_NUM_WORKERS
@@ -388,7 +395,8 @@ if __name__ == '__main__':
     # is used if available, else the gevent web server is used.
     
     fo = open("timeline_server.txt", "w")
-
+    f_js = open("time_jisuan.txt", "w")
+    
     time_start = time.time()
     fo.write("*    " + "*    " + "time_start:    " + str(time_start) + "\n")
     print("------------------------------------------------time_start: ", time_start)
