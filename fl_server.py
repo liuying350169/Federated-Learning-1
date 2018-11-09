@@ -264,7 +264,7 @@ class FLServer(object):
                     )
                     
                     time_end_js = time.time()
-                    fo.write(str(self.current_round) + "    time_js:    " + str(time_end_js-time_start_js) + "\n")
+                    f_js.write(str(self.current_round) + "    time_js:    " + str(time_end_js-time_start_js) + "\n")
                     
                     aggr_train_loss, aggr_train_accuracy = self.global_model.aggregate_train_loss_accuracy(
                         [x['train_loss'] for x in self.current_round_client_updates],
