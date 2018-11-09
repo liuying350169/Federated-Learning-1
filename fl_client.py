@@ -165,7 +165,14 @@ class FederatedClient(object):
                 weights = pickle_string_to_obj(req['current_weights'])
 
             self.local_model.set_weights(weights)
+            
+            time_start_training = time.time()
+            
             my_weights, train_loss, train_accuracy = self.local_model.train_one_round()
+            
+            time_end_training = time.time()
+            f_training.write("time_training:    " + str(time_end_training-time_start_training) + "\n")
+            
             resp = {
                 'round_number': req['round_number'],
                 'weights': obj_to_pickle_string(my_weights),
@@ -251,6 +258,7 @@ class FederatedClient(object):
 if __name__ == "__main__":
     
     fo = open("timeline_clinet.txt", "w")
+    f_training = open("time_training.txt", "w")
     
     time_start = time.time()
     print("------------------------------------------------time_start: ", time_start)
