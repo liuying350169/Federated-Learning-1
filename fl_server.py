@@ -206,9 +206,9 @@ class FLServer(object):
                 self.ready_client_sids.remove(request.sid)
 
         @self.socketio.on('client_wake_up')
-        f_client.write(request.sid + "\n")
         def handle_wake_up():
             print("client wake_up: ", request.sid)
+            f_client.write(request.sid + "\n")
             emit('init', {
                     'model_json': self.global_model.model.to_json(),
                     'model_id': self.model_id,
