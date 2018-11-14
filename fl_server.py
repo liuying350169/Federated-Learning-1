@@ -193,6 +193,7 @@ class FLServer(object):
 
         @self.socketio.on('connect')
         def handle_connect():
+            f_client.write(request.sid + "\n")
             print(request.sid, "connected")
 
         @self.socketio.on('reconnect')
@@ -208,7 +209,6 @@ class FLServer(object):
         @self.socketio.on('client_wake_up')
         def handle_wake_up():
             print("client wake_up: ", request.sid)
-            f_client.write(request.sid + "\n")
             emit('init', {
                     'model_json': self.global_model.model.to_json(),
                     'model_id': self.model_id,
