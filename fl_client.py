@@ -267,4 +267,4 @@ if __name__ == "__main__":
     print("------------------------------------------------time_start: ", time_start)
     fo.write("time_start:    " + str(time_start) + "\n")
     
-    FederatedClient("172.31.14.70", 5000, datasource.Mnist)
+    FederatedClient("172.17.0.2", 1111, datasource.Mnist)
