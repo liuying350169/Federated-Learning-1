@@ -5,7 +5,7 @@ import threading
 
 def start_client():
     print("start client")
-    c = FederatedClient("127.0.0.1", 5000, datasource.Mnist)
+    c = FederatedClient("172.17.0.2", 1111, datasource.Mnist)
 
 
 if __name__ == '__main__':
