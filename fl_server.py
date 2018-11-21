@@ -405,5 +405,5 @@ if __name__ == '__main__':
     print("------------------------------------------------time_start: ", time_start)
        
     server = FLServer(GlobalModel_MNIST_CNN, "172.17.0.2", 1111)
-    print("listening on 172.17.0.2", 1111");
+    print("listening on 172.17.0.2", 1111")
     server.start()
